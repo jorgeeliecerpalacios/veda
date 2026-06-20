@@ -1,4 +1,4 @@
-from django.shortcuts import get_object_or_400, render
+from django.shortcuts import get_object_or_404, render
 from django.utils.dateparse import parse_datetime
 from django.views import View
 
@@ -15,11 +15,11 @@ class ResearchTopicView(View):
 
     def get(self, request, subject_id):  # noqa: ANN001, ANN201
         # We fetch the specific subject to extract its context (age, country)
-        subject = get_object_or_400(Subject, id=subject_id)
+        subject = get_object_or_404(Subject, id=subject_id)
         return render(request, "ai_core/research_form.html", {"subject": subject})
 
     def post(self, request, subject_id):  # noqa: ANN001, ANN201
-        subject = get_object_or_400(Subject, id=subject_id)
+        subject = get_object_or_404(Subject, id=subject_id)
         raw_topic = request.POST.get("topic")
         methodology = request.POST.get("methodology", "Constructivism")
 

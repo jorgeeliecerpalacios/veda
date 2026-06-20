@@ -21,10 +21,10 @@ from django.contrib import admin
 from django.urls import include, path
 
 urlpatterns = [
-    path("admin/", admin.site.split if hasattr(admin, "site") else admin.site.urls),
+    path("admin/", admin.site.urls, name="admin"),
     # Enrutadores modulares de Veda
-    path("schedule/", include("schedule_app.urls")),
-    path("ai-core/", include("ai_core_app.urls")),
+    path("schedule/", include(("schedule_app.urls", "schedule"), namespace="schedule")),
+    path("ai-core/", include(("ai_core_app.urls", "ai_core"), namespace="ai_core")),
 ]
 
 # Servir archivos multimedia (imágenes, audios, videos) en entorno de desarrollo local

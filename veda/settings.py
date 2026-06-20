@@ -61,7 +61,7 @@ ROOT_URLCONF = "veda.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [os.path.join(BASE_DIR, "templates")],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -126,7 +126,17 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
+STATICFILES_BASE_DIR = BASE_DIR / "static"
+STATICFILES_DIRS = [
+    STATICFILES_BASE_DIR,
+]
+# STATIC_ROOT = STATICFILES_BASE_DIR
+
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+
 STATIC_URL = "static/"
+MEDIA_URL = "/media/"
+LOGIN_URL = "/users/login/"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
