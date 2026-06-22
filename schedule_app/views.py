@@ -32,7 +32,7 @@ class SubjectCreateView(CreateView):
     template_name = "schedule/subject_form.html"
     success_url = reverse_lazy("schedule:subject_list")
 
-    def form_valid(self, form):  # noqa: ANN201
+    def form_valid(self, form):  # noqa: ANN001, ANN201
         # Aquí, si usas el sistema de autenticación de Django en el futuro,
         # asociamos automáticamente al docente logueado:
         # form.instance.teacher = self.request.user

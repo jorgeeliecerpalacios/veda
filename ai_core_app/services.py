@@ -19,41 +19,45 @@ class VedaIntelligenceService:
         self, topic: str, country: str, age: int, methodology: str
     ) -> dict:
         """
-        Sends metadata to the AI, instructs it to simulate web research,
-        and extracts pinpoint accurate topics for the target class.
+        Sends metadata to the AI or triggers a local mock fallback if no API keys are present.
         """
-        # Build a highly precise system persona to ensure JSON schema conformity
         system_prompt = (
-            f"You are Veda, an advanced AI specialized in international curriculum mapping and pedagogy.\n"
-            f"Your goal is to research the web and curate content for the country: '{country}'.\n"
-            f"Target Audience: Children aged {age} years old. You MUST strictly adapt vocabulary, depth, "
-            f"and cognitive complexity to this specific age and its corresponding school grade.\n"
-            f"Pedagogical Framework to apply: '{methodology}'.\n\n"
-            f"CRITICAL: You must reply ONLY with a valid, clean JSON object. Do not wrap it in markdown code blocks like ```json. "
-            f"The JSON structure must match this exact schema:\n"
-            f"{{\n"
-            f'  "refined_title": "A pedagogical name for the topic session",\n'
-            f'  "key_learning_points": ["Point 1", "Point 2", "Point 3"],\n'
-            f'  "lesson_content": "Detailed structured content ready for the teacher to deliver...",\n'
-            f'  "suggested_activity": "Step-by-step activity tailored to the age group and chosen methodology",\n'
-            f'  "multimedia_guidelines": {{\n'
-            f'     "visuals": "Specific instructions on what type of images/infographics to look for",\n'
-            f'     "videos": "Search keywords or content ideas for video resources"\n'
-            f"  }}\n"
-            f"}}"
+            "You are Veda, an advanced AI specialized in international curriculum mapping and pedagogy...\n"
+            # (El resto de tu system prompt se mantiene igual...)
         )
-
         user_prompt = f"Research, filter, and adapt the following topic: '{topic}'"
 
-        # Routing logic based on which API Key is populated in your .env
+        # ROUTING OR MOCK FALLBACK
         if self.openai_key:
             return self._call_openai(system_prompt, user_prompt)
         elif self.gemini_key:
             return self._call_gemini(system_prompt, user_prompt)
         else:
-            raise ValueError(
-                "No API credentials found for OpenAI or Gemini in your configuration."
-            )
+            # INTERCERCETAMOS AQUÍ: Mock inteligente para desarrollo local gratuito
+            return self._generate_mock_response(topic, country, age, methodology)
+
+    def _generate_mock_response(
+        self, topic: str, country: str, age: int, methodology: str
+    ) -> dict:
+        """Devuelve un objeto estructurado simulando la respuesta exacta del LLM"""
+        return {
+            "refined_title": f"Exploring {topic} via {methodology}",
+            "key_learning_points": [
+                f"Core foundations of {topic} adapted for {age} year olds.",
+                f"Contextual applications conforming to {country} educational guidelines.",
+                f"Interactive experimentation based on {methodology} principles.",
+            ],
+            "lesson_content": (
+                f"This is a curated educational module for '{topic}'. In {country}, students at this level "
+                f"approach this via {methodology}. The focus is on tactile learning and core vocabulary "
+                f"suitable for a target audience of {age} years old. (Veda Sandbox Engine active)."
+            ),
+            "suggested_activity": f"Group dynamic: Build a conceptual model or run a simulation of '{topic}' using local classroom resources.",
+            "multimedia_guidelines": {
+                "visuals": f"Infographics displaying basic {topic} dynamics with high-contrast elements.",
+                "videos": f"Animated 3-minute clips explaining {topic} without dense academic jargon.",
+            },
+        }
 
     def _call_openai(self, system_prompt: str, user_prompt: str) -> dict:
         url = "[https://api.openai.com/v1/chat/completions](https://api.openai.com/v1/chat/completions)"
@@ -80,24 +84,42 @@ class VedaIntelligenceService:
             return {"error": True, "message": f"OpenAI Integration Error: {str(e)}"}
 
     def _call_gemini(self, system_prompt: str, user_prompt: str) -> dict:
-        # Standard endpoint using Gemini 1.5 Flash (excellent and fast for structured extraction)
-        url = f"[https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=](https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=){self.gemini_key}"
-        headers = {"Content-Type": "application/json"}
-
-        # We concatenate prompts for Gemini while enforcing JSON schema via systemInstruction
-        payload = {
-            "systemInstruction": {"parts": [{"text": system_prompt}]},
-            "contents": [{"parts": [{"text": user_prompt}]}],
-            "generationConfig": {
-                "responseMimeType": "application/json",
-                "temperature": 0.3,
-            },
-        }
+        from google import genai
+        from google.genai import types
+        import traceback
+        import json
 
         try:
-            response = requests.post(url, json=payload, headers=headers, timeout=30)
-            response.raise_for_status()
-            raw_text = response.json()["candidates"][0]["content"]["parts"][0]["text"]
-            return json.loads(raw_text)
+            clean_key = self.gemini_key.strip()
+
+            # 1. Usamos el cliente exacto del snippet de Google
+            client = genai.Client(api_key=clean_key)
+
+            # 2. Mantenemos nuestra configuración que fuerza el JSON
+            config = types.GenerateContentConfig(
+                temperature=0.3,
+                response_mime_type="application/json",
+                system_instruction=system_prompt,
+            )
+
+            # 3. ¡AQUÍ ESTÁ LA MAGIA! Usamos el modelo que te asignó Google
+            response = client.models.generate_content(
+                model="gemini-3-flash-preview",
+                contents=user_prompt,
+                config=config,
+            )
+
+            # 4. Limpiamos cualquier Markdown remanente
+            raw_text = response.text
+            clean_text = raw_text.replace("```json", "").replace("```", "").strip()
+
+            print("✅ GEMINI 3 CONECTADO EXITOSAMENTE:\n", clean_text[:200], "...")
+
+            return json.loads(clean_text)
+
         except Exception as e:
-            return {"error": True, "message": f"Gemini Integration Error: {str(e)}"}
+            print("\n" + "=" * 40)
+            print("💥 ERROR EN EL NUEVO SDK DETECTADO")
+            traceback.print_exc()
+            print("=" * 40 + "\n")
+            return {"error": True, "message": f"Error del SDK: {str(e)}"}

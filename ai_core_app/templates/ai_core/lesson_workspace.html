@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block title %}Lesson Workspace | Veda{% endblock %}
+{% block page_title %}Lesson Workspace Editor{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    
+    <div class="lg:col-span-2 space-y-6">
+        <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+            <div class="flex justify-between items-start">
+                <span class="bg-indigo-100 text-indigo-700 text-xs font-bold px-3 py-1 rounded-full">
+                    {{ block.pedagogical_methodology }}
+                </span>
+                <p class="text-xs text-slate-400 font-mono"><i class="fa-solid fa-calendar"></i> {{ block.start_time }}</p>
+            </div>
+            <h2 class="text-3xl font-extrabold text-slate-800">{{ block.topic_title }}</h2>
+            <hr class="border-slate-100">
+            
+            <h4 class="text-lg font-bold text-slate-700 flex items-center gap-2">
+                <i class="fa-solid fa-file-lines text-indigo-500"></i> Lesson Material
+            </h4>
+            <p class="text-slate-600 leading-relaxed whitespace-pre-line bg-slate-50 p-4 rounded-xl border border-slate-100">
+                {{ block.ai_generated_content }}
+            </p>
+        </div>
+
+        <div class="bg-amber-50 border border-amber-200 p-6 rounded-2xl shadow-sm">
+            <h4 class="text-lg font-bold text-amber-800 flex items-center gap-2 mb-2">
+                <i class="fa-solid fa-lightbulb"></i> Recommended Classroom Activity
+            </h4>
+            <p class="text-amber-900 text-sm leading-relaxed">
+                {{ ai_data.suggested_activity }}
+            </p>
+        </div>
+    </div>
+
+    <div class="space-y-6">
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+            <h4 class="font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-list-check text-emerald-500"></i> Key Learning Points
+            </h4>
+            <ul class="space-y-3">
+                {% for point in ai_data.key_learning_points %}
+                <li class="text-sm text-slate-600 flex items-start gap-2">
+                    <i class="fa-solid fa-circle-check text-emerald-500 mt-0.5 flex-shrink-0"></i>
+                    <span>{{ point }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+            <h4 class="font-bold text-slate-800 flex items-center gap-2">
+                <i class="fa-solid fa-photo-film text-indigo-500"></i> Media Search Keywords
+            </h4>
+            
+            <div class="p-3 bg-slate-50 rounded-xl">
+                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Images / Infographics</p>
+                <p class="text-xs text-slate-600">{{ ai_data.multimedia_guidelines.visuals }}</p>
+            </div>
+
+            <div class="p-3 bg-slate-50 rounded-xl">
+                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Videos & Audios</p>
+                <p class="text-xs text-slate-600">{{ ai_data.multimedia_guidelines.videos }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

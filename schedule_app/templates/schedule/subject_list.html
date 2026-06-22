@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}My Subjects | Veda{% endblock %}
+{% block page_title %}My Educational Subjects{% endblock %}
+
+{% block content %}
+<div class="flex justify-between items-center mb-8">
+    <div>
+        <p class="text-slate-500">Welcome back, Jorge. You have {{ total_subjects }} subjects registered.</p>
+    </div>
+    <a href="{% url 'schedule:subject_create' %}" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl font-semibold shadow-sm transition-all flex items-center gap-2">
+        <i class="fa-solid fa-plus"></i> New Subject
+    </a>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for subject in subjects %}
+    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+        <div class="flex justify-between items-start mb-4">
+            <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center text-indigo-600">
+                <i class="fa-solid fa-book text-xl"></i>
+            </div>
+            <span class="bg-slate-100 text-slate-600 text-xs font-bold px-2 py-1 rounded">
+                {{ subject.school_grade }}
+            </span>
+        </div>
+        <h3 class="text-xl font-bold text-slate-800 mb-2">{{ subject.name }}</h3>
+        <p class="text-slate-500 text-sm mb-6 line-clamp-2">{{ subject.description }}</p>
+        
+        <div class="flex items-center justify-between pt-4 border-t border-slate-50">
+            <div class="flex items-center gap-2 text-slate-400 text-sm">
+                <i class="fa-solid fa-child-reaching"></i>
+                <span>Age: {{ subject.target_age }}</span>
+            </div>
+            <a href="{% url 'ai_core:research_topic' subject.id %}" class="text-indigo-600 font-semibold text-sm hover:underline flex items-center gap-1">
+                Research with AI <i class="fa-solid fa-arrow-right text-xs"></i>
+            </a>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-span-full bg-white border-2 border-dashed border-slate-300 rounded-3xl p-12 text-center text-slate-500">
+        <i class="fa-solid fa-folder-plus text-5xl mb-4 text-slate-300"></i>
+        <p class="text-lg">No subjects found. Create your first subject to start planning!</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

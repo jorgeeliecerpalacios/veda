@@ -1,5 +1,6 @@
 from django.shortcuts import get_object_or_404, render
 from django.utils.dateparse import parse_datetime
+from django.utils.timezone import make_aware, is_naive
 from django.views import View
 
 from schedule_app.models import ClassBlock, Subject
@@ -26,6 +27,15 @@ class ResearchTopicView(View):
         # Calendar block inputs from the teacher
         start_str = request.POST.get("start_time")
         end_str = request.POST.get("end_time")
+
+        start_dt = parse_datetime(start_str) if start_str else subject.created_at
+        if start_dt and is_naive(start_dt):
+            start_dt = make_aware(start_dt)
+
+        end_dt = parse_datetime(end_str) if end_str else subject.created_at
+        if end_dt and is_naive(end_dt):
+            end_dt = make_aware(end_dt)
+        print("Received POST data:", request.POST)
 
         # Trigger our AI Core engine
         ai_engine = VedaIntelligenceService()
