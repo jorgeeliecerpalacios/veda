@@ -1,0 +1,51 @@
+<div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
+    <h2 class="text-xl font-bold mb-4 text-gray-800">Adjuntar Nuevo Recurso</h2>
+    
+    <form action="{% url 'resources:add_resource' block.id %}" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700">Título del recurso</label>
+            <input type="text" name="title" required class="w-full mt-1 p-2 border rounded-md">
+        </div>
+
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700">Tipo de recurso</label>
+            <select id="resourceType" name="resource_type" onchange="toggleFields()" class="w-full mt-1 p-2 border rounded-md">
+                <option value="document">PDF / Documento</option>
+                <option value="video">YouTube / Video</option>
+                <option value="link">Enlace Web</option>
+            </select>
+        </div>
+
+        <div id="fileField" class="mb-4">
+            <label class="block text-sm font-medium text-gray-700">Seleccionar archivo</label>
+            <input type="file" name="file" class="w-full mt-1">
+        </div>
+
+        <div id="urlField" class="mb-4 hidden">
+            <label class="block text-sm font-medium text-gray-700">URL o Link</label>
+            <input type="url" name="url" class="w-full mt-1 p-2 border rounded-md">
+        </div>
+
+        <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">
+            Guardar Recurso
+        </button>
+    </form>
+</div>
+
+<script>
+function toggleFields() {
+    const type = document.getElementById('resourceType').value;
+    const fileField = document.getElementById('fileField');
+    const urlField = document.getElementById('urlField');
+
+    if (type === 'document' || type === 'image') {
+        fileField.classList.remove('hidden');
+        urlField.classList.add('hidden');
+    } else {
+        fileField.classList.add('hidden');
+        urlField.classList.remove('hidden');
+    }
+}
+</script>
