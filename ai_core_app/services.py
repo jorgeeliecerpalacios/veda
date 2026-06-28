@@ -84,10 +84,11 @@ class VedaIntelligenceService:
             return {"error": True, "message": f"OpenAI Integration Error: {str(e)}"}
 
     def _call_gemini(self, system_prompt: str, user_prompt: str) -> dict:
+        import json
+        import traceback
+
         from google import genai
         from google.genai import types
-        import traceback
-        import json
 
         try:
             clean_key = self.gemini_key.strip()
@@ -96,10 +97,15 @@ class VedaIntelligenceService:
             client = genai.Client(api_key=clean_key)
 
             # 2. Mantenemos nuestra configuración que fuerza el JSON
+            # Configuración optimizada para velocidad (sin bloqueos de espera)
             config = types.GenerateContentConfig(
                 temperature=0.3,
                 response_mime_type="application/json",
                 system_instruction=system_prompt,
+                # Forzamos a que no gaste tiempo en el proceso de "thinking" extenso
+                thinking_config=types.ThinkingConfig(
+                    thinking_budget=0
+                )
             )
 
             # 3. ¡AQUÍ ESTÁ LA MAGIA! Usamos el modelo que te asignó Google
