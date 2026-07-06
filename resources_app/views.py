@@ -1,8 +1,8 @@
+from ai_core_app.models import ClassBlock
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 
-from ai_core_app.models import ClassBlock
-
+# pyrefly: ignore [missing-import]
 from .models import Resource
 
 

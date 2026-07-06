@@ -25,6 +25,7 @@ urlpatterns = [
     # Enrutadores modulares de Veda
     path("schedule/", include(("schedule_app.urls", "schedule"), namespace="schedule")),
     path("ai-core/", include(("ai_core_app.urls", "ai_core"), namespace="ai_core")),
+    path("resources/", include(("resources_app.urls", "resources"), namespace="resources")),
 ]
 
 # Servir archivos multimedia (imágenes, audios, videos) en entorno de desarrollo local
