@@ -1,3 +1,5 @@
+import json
+
 from django.shortcuts import get_object_or_404, render
 from django.utils.dateparse import parse_datetime
 from django.utils.timezone import is_naive, make_aware
@@ -53,18 +55,42 @@ class ResearchTopicView(View):
                 {"subject": subject, "error": ai_response["message"]},
             )
 
+        # Convertimos el diccionario completo de la IA en una cadena de texto JSON para la BD
+        ai_json_string = json.dumps(ai_response, ensure_ascii=False)
+
         # DB Persistence - Instantiating our Schedule Model dynamically
         new_block = ClassBlock.objects.create(
             subject=subject,
-            topic_title=ai_response.get("refined_title", raw_topic),
-            ai_generated_content=ai_response.get("lesson_content"),
+            topic_title=ai_response.get("topic", raw_topic),
+            ai_generated_content=ai_json_string,
             pedagogical_methodology=methodology,
-            start_time=parse_datetime(start_str) if start_str else subject.created_at,
-            end_time=parse_datetime(end_str) if end_str else subject.created_at,
+            start_time=start_dt if start_dt else subject.created_at,
+            end_time=end_dt if end_dt else subject.created_at,
         )
+
+        # 🎯 MISMO MAPEO EXACTO PARA EL POST
+        adaptation = ai_response.get("pedagogical_adaptation", {})
+
+        ai_data_mapped = {
+            "suggested_activity": " / ".join(adaptation.get("scaffolding_strategies", [])) or "No activity specified",
+            "key_learning_points": adaptation.get("learning_objectives", []),
+            "multimedia_guidelines": {
+                "visuals": "Search graphs or numerical lines for irrational numbers.",
+                "videos": "Search visual proofs of the Pythagorean theorem."
+            }
+        }
+
+        lesson_material = f"Definition:\n{adaptation.get('definition', '')}\n\n"
+        lesson_material += "Key Concepts:\n" + "\n".join([f"• {c}" for c in adaptation.get("key_concepts", [])])
 
         return render(
             request,
             "ai_core/lesson_workspace.html",
-            {"new_block": new_block, "ai_data": ai_response},
+            {
+                "block": new_block,                  # Para buscar variables generales
+                "new_block": new_block,              # Para el modal y el formulario de recursos
+                "subject": subject,
+                "ai_data": ai_data_mapped,           # Diccionario con llaves estandarizadas
+                "lesson_material": lesson_material, # Texto limpio para el cuadro central
+            },
         )
