@@ -1,20 +1,18 @@
 from django.urls import path
 
 # pyrefly: ignore [missing-import]
-from . import views  # Crearemos estas vistas sencillas en el paso del front
+from . import views
+
+app_name = "schedule"  # Namespace para reversar URLs limpiamente
 
 urlpatterns = [
-    # Ejemplo: /schedule/
+    # /schedule/ -> Panel del Calendario
     path(route="", view=views.SubjectListView.as_view(), name="subject_list"),
-    # Ejemplo: /schedule/subject/add/
+
+    # /schedule/subject/add/ -> Crear materia
     path(
         route="subject/add/",
         view=views.SubjectCreateView.as_view(),
         name="subject_create",
     ),
-    # path(
-    # route='',
-    # view=views.index,
-    # name='index'
-    # ),
 ]

@@ -1,39 +1,37 @@
 from django.urls import reverse_lazy
-from django.views.generic import CreateView, ListView
+from django.views.generic import CreateView, ListView  # 👈 Añadimos CreateView aquí
 
-from .models import Subject
+# pyrefly: ignore [missing-import]
+from .models import ClassBlock, Subject
 
 
 class SubjectListView(ListView):
     """
-    Vista principal del Dashboard del Docente.
-    Lista todas las materias (Subjects) configuradas en Veda.
+    Vista principal del calendario / agenda del docente.
+    Muestra los bloques de clase ordenados cronológicamente.
     """
+    model = ClassBlock
+    template_name = "schedule/calendar_dashboard.html"
+    context_object_name = "class_blocks"
 
-    model = Subject
-    template_name = "schedule/subject_list.html"
-    context_object_name = "subjects"
+    def get_queryset(self):  # noqa: ANN201
+        # Retornamos los bloques ordenados por fecha de inicio, 
+        # trayendo de golpe la materia (select_related) para optimizar consultas a la DB
+        return ClassBlock.objects.select_related('subject').order_by('start_time')
 
     def get_context_data(self, **kwargs):  # noqa: ANN003, ANN201
         context = super().get_context_data(**kwargs)
-        # Añadimos métricas rápidas para mostrar en tarjetas superiores en el frontend
-        context["total_subjects"] = self.get_queryset().count()
+        # También pasamos las materias disponibles por si necesitas filtros en el front
+        context["subjects"] = Subject.objects.all()
         return context
 
 
+# ➕ NUEVA VISTA: Añadimos la vista que le hace falta a tus URLs
 class SubjectCreateView(CreateView):
     """
-    Permite al docente registrar una nueva materia, definiendo el país,
-    la edad del niño y el grado escolar para alimentar el contexto de la IA.
+    Vista para que el docente pueda añadir una nueva materia (Subject).
     """
-
     model = Subject
-    fields = ["name", "description", "country", "target_age", "school_grade"]
+    fields = ["name", "country", "target_age"]  # Los campos correspondientes de tu modelo Subject
     template_name = "schedule/subject_form.html"
-    success_url = reverse_lazy("schedule:subject_list")
-
-    def form_valid(self, form):  # noqa: ANN001, ANN201
-        # Aquí, si usas el sistema de autenticación de Django en el futuro,
-        # asociamos automáticamente al docente logueado:
-        # form.instance.teacher = self.request.user
-        return super().form_valid(form)
+    success_url = reverse_lazy("schedule:subject_list")  # Al guardar, regresa a la agenda
