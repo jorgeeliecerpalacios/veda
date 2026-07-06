@@ -4,73 +4,133 @@
 {% block page_title %}Teacher Schedule{% endblock %}
 
 {% block content %}
+<!-- Hojas de estilo y Scripts de FullCalendar vía CDN -->
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+
 <div class="space-y-6">
-    <!-- Encabezado del Dashboard -->
+    <!-- Encabezado -->
     <div class="flex justify-between items-center bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
         <div>
-            <h2 class="text-xl font-bold text-slate-800">Class Timeline</h2>
-            <p class="text-xs text-slate-500">Review your generated classes and upcoming academic sessions.</p>
+            <h2 class="text-xl font-bold text-slate-800">Academic Calendar</h2>
+            <p class="text-xs text-slate-500">Manage your classes and time blocks just like Google Calendar.</p>
         </div>
         <a href="{% url 'schedule:subject_create' %}" class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2 px-4 rounded-xl transition-colors shadow-xs">
             <i class="fa-solid fa-plus"></i> New Subject
         </a>
     </div>
 
-    <!-- Contenedor Principal -->
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-        <div class="p-6 border-b border-slate-100 bg-slate-50/50">
-            <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider">Upcoming Sessions</h3>
-        </div>
-
-        <div class="p-6">
-            {% if class_blocks %}
-            <div class="relative border-l-2 border-indigo-100 ml-4 space-y-8">
-                {% for block in class_blocks %}
-                <div class="relative pl-8 group">
-                    <!-- Indicador del Timeline (Bólido del reloj) -->
-                    <div class="absolute -left-[9px] top-1 w-4 h-4 rounded-full border-4 border-white bg-indigo-500 shadow-xs group-hover:bg-emerald-500 transition-colors"></div>
-                    
-                    <!-- Tarjeta de la Sesión -->
-                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-2xs hover:shadow-xs hover:border-slate-300 transition-all flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                        <div class="space-y-1">
-                            <div class="flex items-center gap-2">
-                                <span class="bg-slate-100 text-slate-700 text-[10px] font-extrabold px-2 py-0.5 rounded-md uppercase">
-                                    {{ block.subject.name }}
-                                </span>
-                                <span class="text-xs text-indigo-600 font-semibold">
-                                    <i class="fa-solid fa-graduation-cap text-[11px]"></i> {{ block.pedagogical_methodology }}
-                                </span>
-                            </div>
-                            <h4 class="text-base font-bold text-slate-800">{{ block.topic_title }}</h4>
-                            <p class="text-xs text-slate-400 font-mono flex items-center gap-1.5">
-                                <i class="fa-solid fa-clock text-slate-300"></i> 
-                                {{ block.start_time|date:"Y-m-d H:i" }} — {{ block.end_time|date:"H:i" }}
-                            </p>
-                        </div>
-
-                        <!-- Acciones Rápidas -->
-                        <div class="flex items-center gap-2 w-full md:w-auto justify-end">
-                            <!-- Enlace directo al Workspace del Recurso que acabamos de programar -->
-                            <a href="{% url 'resources:lesson_workspace_detail' block.id %}" class="inline-flex items-center gap-1.5 bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-200 text-slate-700 hover:text-indigo-600 text-xs font-bold py-2 px-4 rounded-xl transition-all shadow-2xs">
-                                <i class="fa-solid fa-chalkboard-user text-[11px]"></i> Open Workspace
-                            </a>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-            {% else %}
-            <!-- Estado vacío -->
-            <div class="text-center py-12 border-2 border-dashed border-slate-100 rounded-xl">
-                <i class="fa-solid fa-calendar-xmark text-4xl text-slate-300 mb-3 block"></i>
-                <h4 class="text-sm font-bold text-slate-700">No sessions scheduled yet</h4>
-                <p class="text-xs text-slate-400 mt-1 mb-4">Go to AI Research to investigate a topic and auto-schedule a workspace block.</p>
-                <a href="#" class="inline-flex items-center gap-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold py-2 px-3 rounded-lg transition-colors">
-                    <i class="fa-solid fa-robot"></i> Go to AI Research
-                </a>
-            </div>
-            {% endif %}
-        </div>
+    <!-- Contenedor del Calendario Estilo Google Calendar -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+        <div id="calendar"></div>
     </div>
 </div>
+
+<!-- Estilos personalizados para mimetizar a Google Calendar usando Tailwind -->
+<style>
+    /* Estilización de los botones del Toolbar de FullCalendar */
+    .fc .fc-button-primary {
+        background-color: #ffffff !important;
+        border-color: #e2e8f0 !important;
+        color: #334155 !important;
+        font-weight: 700 !important;
+        font-size: 0.75rem !important;
+        border-radius: 0.75rem !important;
+        text-transform: capitalize !important;
+        padding: 0.5rem 1rem !important;
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+        transition: all 0.2s;
+    }
+    .fc .fc-button-primary:hover {
+        background-color: #f8fafc !important;
+        border-color: #cbd5e1 !important;
+    }
+    .fc .fc-button-active {
+        background-color: #eef2ff !important;
+        border-color: #e0e7ff !important;
+        color: #4f46e5 !important;
+    }
+    /* Título del mes/semana */
+    .fc .fc-toolbar-title {
+        font-size: 1.125rem !important;
+        font-weight: 800 !important;
+        color: #1e293b !important;
+    }
+    /* Estilo de los bloques de eventos (Clases) */
+    .fc-v-event {
+        background-color: #e0e7ff !important;
+        border: 1px solid #c7d2fe !important;
+        border-left: 4px solid #4f46e5 !important;
+        border-radius: 0.5rem !important;
+        padding: 4px 8px !important;
+        cursor: pointer;
+        transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .fc-v-event:hover {
+        transform: scale(1.01);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+    .fc-event-title {
+        font-weight: 700 !important;
+        color: #1e293b !important;
+        font-size: 0.8rem !important;
+    }
+    .fc-event-time {
+        color: #4f46e5 !important;
+        font-weight: 600 !important;
+        font-size: 0.7rem !important;
+    }
+    /* Líneas divisorias de horas más sutiles */
+    .fc .fc-timegrid-slot {
+        height: 3rem !important;
+        border-bottom: 1px id="time-grid-line" solid #f1f5f9 !important;
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const calendarEl = document.getElementById('calendar');
+    
+    // Construimos la lista de eventos inyectando los datos de Django a JavaScript
+    const eventsData = [
+        {% for block in class_blocks %}
+        {
+            id: "{{ block.id }}",
+            title: "{{ block.topic_title }} ({{ block.subject.name }})",
+            start: "{{ block.start_time|date:'Y-m-d H:i:s' }}",
+            end: "{{ block.end_time|date:'Y-m-d H:i:s' }}",
+            // Guardamos la URL del Workspace dinámicamente en el evento
+            url: "{% url 'resources:lesson_workspace_detail' block.id %}",
+            // Si quieres diferenciar colores por metodología
+            extendedProps: {
+                methodology: "{{ block.pedagogical_methodology }}"
+            }
+        },
+        {% endfor %}
+    ];
+
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'timeGridWeek', // Vista por defecto: Semana con grilla de horas (Estilo Google)
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay' // Alternar entre Mes, Semana y Día
+        },
+        locale: 'en',
+        slotMinTime: '06:00:00', // El calendario inicia a las 6:00 AM
+        slotMaxTime: '22:00:00', // El calendario termina a las 10:00 PM
+        allDaySlot: false,
+        events: eventsData,
+        
+        // Cuando el docente dé clic sobre el bloque de clase... ¡PUM! Abre su Workspace
+        eventClick: function(info) {
+            info.jsEvent.preventDefault(); // Evita comportamiento por defecto
+            if (info.event.url) {
+                window.location.href = info.event.url;
+            }
+        }
+    });
+
+    calendar.render();
+});
+</script>
 {% endblock %}
