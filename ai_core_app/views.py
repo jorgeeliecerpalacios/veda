@@ -66,5 +66,5 @@ class ResearchTopicView(View):
         return render(
             request,
             "ai_core/lesson_workspace.html",
-            {"block": new_block, "ai_data": ai_response},
+            {"new_block": new_block, "ai_data": ai_response},
         )

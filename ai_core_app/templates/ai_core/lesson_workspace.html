@@ -77,7 +77,7 @@
             </div>
 
             <div class="space-y-3">
-                {% for res in block.resources.all %}
+                {% for res in new_block.resources.all %}
                 <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100 hover:shadow-xs transition-shadow">
                     <div class="flex items-center gap-3">
                         {% if res.resource_type == 'document' %}
@@ -117,7 +117,7 @@
         </div>
   
   {% comment %}  {% endcomment %}
-        <form action="{% url 'resources:add_resource' block.id %}" method="POST" enctype="multipart/form-data" class="p-6 space-y-4">
+        <form action='{% url "resources:add_resource" new_block.id %}' method="POST" enctype="multipart/form-data" class="p-6 space-y-4">
             {% csrf_token %}
             
             <div>

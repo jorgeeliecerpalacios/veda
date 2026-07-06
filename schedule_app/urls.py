@@ -1,5 +1,6 @@
 from django.urls import path
 
+# pyrefly: ignore [missing-import]
 from . import views  # Crearemos estas vistas sencillas en el paso del front
 
 urlpatterns = [
