@@ -46,36 +46,34 @@ class ClassBlockDetailView(View):
 
         if block.ai_generated_content:
             try:
+                # Cargamos el JSON estructurado inmutable desde la base de datos
                 raw_json = json.loads(block.ai_generated_content)
 
-                # Accedemos de forma segura al objeto interno de la IA
-                adaptation = raw_json.get("pedagogical_adaptation", {})
+                # 🎯 MAPEO DIRECTO Y LIMPIO DESDE NUESTRO NUEVO SCHEMA DE PYDANTIC
+                multimedia = raw_json.get("multimedia_guidelines", {})
 
-                # 🎯 MAPEO EXACTO BASADO EN TU CAPTURA
                 ai_data = {
-                    "suggested_activity": " / ".join(adaptation.get("scaffolding_strategies", [])) or "No activity specified",
-                    "key_learning_points": adaptation.get("learning_objectives", []),
+                    "suggested_activity": raw_json.get("suggested_activity", "No activity specified"),
+                    "key_learning_points": raw_json.get("key_learning_points", []),
                     "multimedia_guidelines": {
-                        "visuals": "Search graphs or numerical lines for irrational numbers.",
-                        "videos": "Search visual proofs of the Pythagorean theorem."
+                        "visuals": multimedia.get("visuals", f"infografia de {block.topic_title}"),
+                        "videos": multimedia.get("videos", f"video de {block.topic_title}")
                     }
                 }
 
-                # Creamos un material de lectura estructurado y estético en vez de tirar el JSON crudo
-                lesson_material = f"Definition:\n{adaptation.get('definition', '')}\n\n"
-                lesson_material += "Key Concepts:\n" + "\n".join([f"• {c}" for c in adaptation.get("key_concepts", [])])
+                # Extraemos el material de clase completo que guardó Gemini
+                lesson_material = raw_json.get("lesson_material", f"Topic Overview: {block.topic_title}")
 
             except json.JSONDecodeError:
                 lesson_material = block.ai_generated_content
 
         return render(request, "ai_core/lesson_workspace.html", {
-            "block": block,              # 👈 IMPORTANTE: Usamos 'block' para que coincida con tu HTML
-            "new_block": block,          # Mantenemos este por el modal y los recursos
+            "block": block,              # Mantenemos consistencia con tu HTML
+            "new_block": block,          # Para el modal y el listado de recursos
             "subject": block.subject,
             "ai_data": ai_data,
-            "lesson_material": lesson_material, # 👈 Variable limpia con el texto de la clase
+            "lesson_material": lesson_material,
         })
-
 
 class MultimediaResourcesListView(ListView):
     """

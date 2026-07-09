@@ -6,7 +6,9 @@
 {% block content %}
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
     
+    <!-- COLUMNA IZQUIERDA: Materiales Principales y Actividades -->
     <div class="lg:col-span-2 space-y-6">
+        <!-- Tarjeta de Material de la Lección -->
         <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm space-y-4">
             <div class="flex justify-between items-start">
                 <span class="bg-indigo-100 text-indigo-700 text-xs font-bold px-3 py-1 rounded-full">
@@ -25,17 +27,73 @@
             </p>
         </div>
 
+        <!-- 2. Tarjeta Dinámica: Recommended Classroom Activity (Con soporte para saltos de línea) -->
         <div class="bg-amber-50 border border-amber-200 p-6 rounded-2xl shadow-sm">
-            <h4 class="text-lg font-bold text-amber-800 flex items-center gap-2 mb-2">
-                <i class="fa-solid fa-lightbulb"></i> Recommended Classroom Activity
+            <h4 class="text-lg font-bold text-amber-800 flex items-center gap-2 mb-3">
+                <i class="fa-solid fa-lightbulb text-amber-500"></i> Recommended Classroom Activity
             </h4>
-            <p class="text-amber-900 text-sm leading-relaxed">
-                {{ ai_data.suggested_activity }}
-            </p>
+            <div class="text-amber-950 text-sm leading-relaxed whitespace-pre-line">
+                {% if ai_data.suggested_activity %}
+                    {{ ai_data.suggested_activity }}
+                {% else %}
+                    <p class="italic text-amber-700">No activity specified for this session.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- 3. NUEVA SECCIÓN COMPLEMENTARIA: Class Resources Inline Viewer -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+            <h4 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                <i class="fa-solid fa-eye text-blue-500"></i> Attached Document & Resource Viewer
+            </h4>
+            <p class="text-xs text-slate-400">Review your attached lesson support materials directly within Veda before your classroom session.</p>
+            
+            <div class="space-y-6">
+                {% for res in new_block.resources.all %}
+                    {% if res.file or res.url %}
+                    <div class="border border-slate-100 rounded-xl p-4 bg-slate-50/50 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-slate-700 block">📁 Resource Display: {{ res.title }}</span>
+                            <span class="text-[10px] bg-slate-200 text-slate-600 px-2 py-0.5 rounded-sm font-extrabold uppercase">{{ res.get_resource_type_display }}</span>
+                        </div>
+                        
+                        <!-- Si el recurso es un archivo local (PDF o Imagen) -->
+                        {% if res.file %}
+                            {% if ".pdf" in res.file.url|lower %}
+                                <div class="w-full h-96 rounded-lg overflow-hidden border border-slate-200 bg-white">
+                                    <embed src="{{ res.file.url }}" type="application/pdf" class="w-full h-full" />
+                                </div>
+                            {% else %}
+                                <div class="max-w-md mx-auto rounded-lg overflow-hidden border border-slate-200 bg-white p-2">
+                                    <img src="{{ res.file.url }}" alt="{{ res.title }}" class="w-full h-auto object-contain rounded-md" />
+                                </div>
+                            {% endif %}
+                        <!-- Si el recurso es un link externo o de video -->
+                        {% elif res.url %}
+                            {% if "youtube.com" in res.url|lower or "youtu.be" in res.url|lower %}
+                                <!-- Aquí podrías formatear un iframe embebido, por ahora dejamos un preview link rápido -->
+                                <div class="p-4 bg-red-50/50 border border-red-100 rounded-lg flex items-center justify-between">
+                                    <p class="text-xs text-red-800 font-medium">🎬 This YouTube stream context can be fully triggered externally:</p>
+                                    <a href="{{ res.url }}" target="_blank" class="text-xs bg-red-600 hover:bg-red-700 text-white font-bold py-1 px-3 rounded-lg transition-colors">Launch Video</a>
+                                </div>
+                            {% else %}
+                                <iframe src="{{ res.url }}" class="w-full h-80 rounded-lg border border-slate-200 bg-white"></iframe>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                {% empty %}
+                    <div class="text-center py-8 border border-dashed border-slate-200 rounded-xl">
+                        <p class="text-xs text-slate-400 italic">No resources attached to generate previews. Upload a file above to view it instantly.</p>
+                    </div>
+                {% endfor %}
+            </div>
         </div>
     </div>
 
+    <!-- COLUMNA DERECHA: Indicadores, Keywords y Archivos -->
     <div class="space-y-6">
+        <!-- Key Learning Points -->
         <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
             <h4 class="font-bold text-slate-800 mb-4 flex items-center gap-2">
                 <i class="fa-solid fa-list-check text-emerald-500"></i> Key Learning Points
@@ -50,22 +108,34 @@
             </ul>
         </div>
 
+        <!-- 1. Media Search Keywords (Transformados en botones inteligentes de búsqueda directa) -->
         <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
             <h4 class="font-bold text-slate-800 flex items-center gap-2">
                 <i class="fa-solid fa-photo-film text-indigo-500"></i> Media Search Keywords
             </h4>
             
-            <div class="p-3 bg-slate-50 rounded-xl">
-                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Images / Infographics</p>
-                <p class="text-xs text-slate-600">{{ ai_data.multimedia_guidelines.visuals }}</p>
+            <!-- Bloque de Imágenes -->
+            <div class="p-4 bg-slate-50 rounded-xl space-y-2">
+                <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Images / Infographics Guidelines</p>
+                <p class="text-xs text-slate-600 italic mb-2">"{{ ai_data.multimedia_guidelines.visuals }}"</p>
+                <a href="https://www.google.com/search?tbm=isch&q={{ block.topic_title }}+{{ ai_data.multimedia_guidelines.visuals }}" target="_blank" 
+                   class="w-full text-center inline-flex items-center justify-center gap-1.5 text-[11px] bg-white border border-slate-200 hover:bg-blue-50 text-slate-700 hover:text-blue-700 py-1.5 px-3 rounded-lg font-bold shadow-2xs transition-colors">
+                    <i class="fa-brands fa-google text-blue-500"></i> Search Live Images
+                </a>
             </div>
 
-            <div class="p-3 bg-slate-50 rounded-xl">
-                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Videos & Audios</p>
-                <p class="text-xs text-slate-600">{{ ai_data.multimedia_guidelines.videos }}</p>
+            <!-- Bloque de Videos -->
+            <div class="p-4 bg-slate-50 rounded-xl space-y-2">
+                <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Videos & Audios Guidelines</p>
+                <p class="text-xs text-slate-600 italic mb-2">"{{ ai_data.multimedia_guidelines.videos }}"</p>
+                <a href="https://www.youtube.com/results?search_query={{ block.topic_title }}+{{ ai_data.multimedia_guidelines.videos }}" target="_blank" 
+                   class="w-full text-center inline-flex items-center justify-center gap-1.5 text-[11px] bg-white border border-slate-200 hover:bg-red-50 text-slate-700 hover:text-red-700 py-1.5 px-3 rounded-lg font-bold shadow-2xs transition-colors">
+                    <i class="fa-brands fa-youtube text-red-500"></i> Search Live Videos
+                </a>
             </div>
         </div>
 
+        <!-- Class Resources Attachment Panel -->
         <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
             <div class="flex justify-between items-center mb-2">
                 <h4 class="font-bold text-slate-800 flex items-center gap-2">
@@ -109,6 +179,7 @@
     </div>
 </div>
 
+<!-- Modal Form Content Container -->
 <div id="resourceModal" class="fixed inset-0 z-50 hidden bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-xl w-full max-w-md transform transition-all overflow-hidden border border-slate-100">
         <div class="flex justify-between items-center px-6 py-4 border-b border-slate-100 bg-slate-50">
@@ -116,7 +187,6 @@
             <button onclick="closeResourceModal()" class="text-slate-400 hover:text-slate-600 transition-colors text-lg font-bold">&times;</button>
         </div>
   
-  {% comment %}  {% endcomment %}
         <form action='{% url "resources:add_resource" new_block.id %}' method="POST" enctype="multipart/form-data" class="p-6 space-y-4">
             {% csrf_token %}
             

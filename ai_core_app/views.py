@@ -21,6 +21,7 @@ class ResearchTopicView(View):
     def get(self, request, subject_id):  # noqa: ANN001, ANN201
         # We fetch the specific subject to extract its context (age, country)
         subject = get_object_or_404(Subject, id=subject_id)
+        print(f"GET request received for subject: {subject.name} (ID: {subject.id})")
         return render(request, "ai_core/research_form.html", {"subject": subject})
 
     def post(self, request, subject_id):  # noqa: ANN001, ANN201
@@ -70,33 +71,59 @@ class ResearchTopicView(View):
             end_time=end_dt if end_dt else subject.created_at,
         )
 
-        # 🎯 MISMO MAPEO EXACTO PARA EL POST
-        adaptation = ai_response.get("pedagogical_adaptation", {})
 
+      # Trigger our AI Core engine
+        ai_engine = VedaIntelligenceService()
+        ai_response = ai_engine.research_and_curate_topic(
+            topic=raw_topic,
+            country=subject.country,
+            age=subject.target_age,
+            methodology=methodology,
+        )
+
+        if "error" in ai_response:
+            return render(
+                request,
+                "ai_core/research_form.html",
+                {"subject": subject, "error": ai_response["message"]},
+            )
+
+        # Convertimos la respuesta para la BD
+        ai_json_string = json.dumps(ai_response, ensure_ascii=False)
+
+        # DB Persistence
+        new_block = ClassBlock.objects.create(
+            subject=subject,
+            topic_title=ai_response.get("topic", raw_topic),
+            ai_generated_content=ai_json_string,
+            pedagogical_methodology=methodology,
+            start_time=start_dt if start_dt else subject.created_at,
+            end_time=end_dt if end_dt else subject.created_at,
+        )
+
+        # 🎯 MAPEO RE-LIMPIO GRACIAS AL ESQUEMA REGULADO
         ai_data_mapped = {
-            "suggested_activity": " / ".join(adaptation.get("scaffolding_strategies", [])) or "No activity specified",
-            "key_learning_points": adaptation.get("learning_objectives", []),
-            "multimedia_guidelines": {
-                "visuals": "Search graphs or numerical lines for irrational numbers.",
-                "videos": "Search visual proofs of the Pythagorean theorem."
-            }
+            "suggested_activity": ai_response.get("suggested_activity", "No activity specified"),
+            "key_learning_points": ai_response.get("key_learning_points", []),
+            "multimedia_guidelines": ai_response.get("multimedia_guidelines", {
+                "visuals": f"infografia de {raw_topic}",
+                "videos": f"video de {raw_topic}"
+            })
         }
 
-        lesson_material = f"Definition:\n{adaptation.get('definition', '')}\n\n"
-        lesson_material += "Key Concepts:\n" + "\n".join([f"• {c}" for c in adaptation.get("key_concepts", [])])
+        lesson_material = ai_response.get("lesson_material", f"Topic Overview: {raw_topic}")
 
         return render(
             request,
             "ai_core/lesson_workspace.html",
             {
-                "block": new_block,                  # Para buscar variables generales
-                "new_block": new_block,              # Para el modal y el formulario de recursos
+                "block": new_block,
+                "new_block": new_block,
                 "subject": subject,
-                "ai_data": ai_data_mapped,           # Diccionario con llaves estandarizadas
-                "lesson_material": lesson_material, # Texto limpio para el cuadro central
+                "ai_data": ai_data_mapped,
+                "lesson_material": lesson_material,
             },
         )
-
 
 class AIResearchDashboardView(ListView):
     """

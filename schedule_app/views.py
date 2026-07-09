@@ -32,9 +32,9 @@ class SubjectCreateView(CreateView):
     Vista para que el docente pueda añadir una nueva materia (Subject).
     """
     model = Subject
-    fields = ["name", "country", "target_age"]  # Los campos correspondientes de tu modelo Subject
+    fields = ["name", "description", "country", "target_age", "school_grade"]  # Los campos correspondientes de tu modelo Subject
     template_name = "schedule/subject_form.html"
-    success_url = reverse_lazy("schedule:subject_list")  # Al guardar, regresa a la agenda
+    success_url = reverse_lazy("schedule:my_subjects_list")  # Al guardar, regresa a la agenda
 
 class SubjectDashboardListView(ListView):
     """
