@@ -35,3 +35,15 @@ class SubjectCreateView(CreateView):
     fields = ["name", "country", "target_age"]  # Los campos correspondientes de tu modelo Subject
     template_name = "schedule/subject_form.html"
     success_url = reverse_lazy("schedule:subject_list")  # Al guardar, regresa a la agenda
+
+class SubjectDashboardListView(ListView):
+    """
+    Vista global para listar todas las materias (My Subjects) 
+    con acceso directo a sus configuraciones o detalles.
+    """
+    model = Subject
+    template_name = "schedule/subject_dashboard.html"
+    context_object_name = "subjects"
+
+    def get_queryset(self):  # noqa: ANN201
+        return Subject.objects.all().order_by('name')

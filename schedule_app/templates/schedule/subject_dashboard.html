@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}My Subjects | Veda{% endblock %}
+{% block page_title %}Academic Subjects Directory{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    
+    <!-- Encabezado del Panel -->
+    <div class="flex justify-between items-center bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
+        <div>
+            <h2 class="text-xl font-bold text-slate-800">My Subjects</h2>
+            <p class="text-xs text-slate-500">Manage your registered academic chairs and configure their parameters.</p>
+        </div>
+        <a href="{% url 'schedule:subject_create' %}" class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2 px-4 rounded-xl transition-colors shadow-xs">
+            <i class="fa-solid fa-plus"></i> Add New Subject
+        </a>
+    </div>
+
+    <!-- Grilla de Materias -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for subject in subjects %}
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-2xs hover:shadow-xs transition-all flex flex-col justify-between overflow-hidden">
+            
+            <div class="p-6 space-y-4">
+                <!-- Icono representativo e información básica -->
+                <div class="flex justify-between items-start">
+                    <div class="w-12 h-12 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center text-lg font-black uppercase tracking-wider">
+                        {{ subject.name|slice:":2" }}
+                    </div>
+                    <span class="bg-indigo-50 text-indigo-700 text-[10px] font-extrabold px-2.5 py-1 rounded-md uppercase tracking-wider">
+                        ID: #{{ subject.id }}
+                    </span>
+                </div>
+
+                <!-- Nombre y Meta-información -->
+                <div class="space-y-1">
+                    <h4 class="text-base font-bold text-slate-800">{{ subject.name }}</h4>
+                    <div class="space-y-1 text-xs text-slate-400">
+                        <p class="flex items-center gap-2">
+                            <i class="fa-solid fa-earth-americas text-slate-300 w-4"></i> 
+                            <span>Country Context: <strong>{{ subject.country }}</strong></span>
+                        </p>
+                        <p class="flex items-center gap-2">
+                            <i class="fa-solid fa-child text-slate-300 w-4"></i> 
+                            <span>Target Student Age: <strong>{{ subject.target_age }} years old</strong></span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botones de Acción Rápidos en el Footer -->
+            <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between gap-2">
+                <!-- Enlace al calendario general -->
+                <a href="{% url 'schedule:subject_list' %}" class="text-[11px] text-slate-500 hover:text-slate-800 font-bold transition-colors">
+                    <i class="fa-solid fa-calendar text-[10px]"></i> View Schedule
+                </a>
+
+                <!-- Lanzar el Core de Inteligencia -->
+                <a href="{% url 'ai_core:research_topic' subject.id %}" class="bg-white hover:bg-indigo-50 border border-slate-200 hover:border-indigo-200 text-indigo-600 text-[11px] font-bold py-1.5 px-3 rounded-lg shadow-2xs transition-all flex items-center gap-1">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> AI Research
+                </a>
+            </div>
+
+        </div>
+        {% empty %}
+        <!-- Estado Vacío -->
+        <div class="col-span-full text-center py-16 bg-white rounded-2xl border border-slate-200 shadow-2xs">
+            <i class="fa-solid fa-graduation-cap text-4xl text-slate-300 mb-3 block"></i>
+            <h4 class="text-base font-bold text-slate-700">No academic subjects found</h4>
+            <p class="text-xs text-slate-400 mt-1 mb-4">You must add at least one subject to structure your lessons and AI workspace triggers.</p>
+            <a href="{% url 'schedule:subject_create' %}" class="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2 px-4 rounded-xl transition-colors shadow-xs">
+                Create Subject
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

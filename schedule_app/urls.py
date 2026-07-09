@@ -15,4 +15,6 @@ urlpatterns = [
         view=views.SubjectCreateView.as_view(),
         name="subject_create",
     ),
+    # 🎯 NUEVA: Ruta para listar las materias de forma independiente
+    path(route="subjects/all/", view=views.SubjectDashboardListView.as_view(), name="my_subjects_list"),
 ]
