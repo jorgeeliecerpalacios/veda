@@ -1,7 +1,7 @@
 from django.urls import path
 
 # pyrefly: ignore [missing-import]
-from .views import ClassBlockDetailView, add_resource
+from .views import ClassBlockDetailView, MultimediaResourcesListView, add_resource
 
 app_name = "resources"
 
@@ -13,5 +13,11 @@ urlpatterns = [
         route="workspace/<int:block_id>/",
         view=ClassBlockDetailView.as_view(),
         name="lesson_workspace_detail",
+    ),
+
+    path(
+        route="multimedia/",
+        view=MultimediaResourcesListView.as_view(),
+        name="multimedia_list",
     ),
 ]

@@ -1,8 +1,10 @@
 import json
 
 from django.contrib import messages
+from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View
+from django.views.generic import ListView
 from schedule_app.models import ClassBlock
 
 # pyrefly: ignore [missing-import]
@@ -73,3 +75,41 @@ class ClassBlockDetailView(View):
             "ai_data": ai_data,
             "lesson_material": lesson_material, # 👈 Variable limpia con el texto de la clase
         })
+
+
+class MultimediaResourcesListView(ListView):
+    """
+    Vista global para listar, buscar y filtrar todos los recursos
+    multimedia subidos por el docente en la plataforma.
+    """
+    model = Resource
+    template_name = "resources/multimedia_dashboard.html"
+    context_object_name = "resources"
+
+    def get_queryset(self):  # noqa: ANN201
+        # Empezamos trayendo todos los recursos ordenados por los más recientes
+        queryset = Resource.objects.all().order_by('-id')
+
+        # Capturamos los filtros del frontend (barra de búsqueda y tipo)
+        search_query = self.request.GET.get('search', '')
+        resource_type = self.request.GET.get('type', '')
+
+        if search_query:
+            # Filtramos por título del recurso o por el tema de la clase asociada
+            queryset = queryset.filter(
+                Q(title__icontains=search_query) | 
+                Q(class_block__topic_title__icontains=search_query)
+            )
+
+        if resource_type and resource_type != 'all':
+            # Filtramos por tipo: 'document', 'video', 'link'
+            queryset = queryset.filter(resource_type=resource_type)
+
+        return queryset
+
+    def get_context_data(self, **kwargs):  # noqa: ANN003, ANN201
+        context = super().get_context_data(**kwargs)
+        # Devolvemos los valores actuales de los filtros para mantenerlos en los inputs del HTML
+        context['search_query'] = self.request.GET.get('search', '')
+        context['current_type'] = self.request.GET.get('type', 'all')
+        return context

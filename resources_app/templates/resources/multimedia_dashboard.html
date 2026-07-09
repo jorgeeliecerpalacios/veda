@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block title %}Multimedia Resources | Veda{% endblock %}
+{% block page_title %}Multimedia Resource Bank{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    
+    <!-- Barra de Filtros y Búsqueda -->
+    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row gap-4 justify-between items-center">
+        <!-- Formulario de Filtros Integrado -->
+        <form method="GET" action="{% url 'resources:multimedia_list' %}" class="w-full flex flex-col sm:flex-row gap-3">
+            
+            <!-- Input de Búsqueda -->
+            <div class="relative flex-1">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-sm"></i>
+                <input type="text" name="search" value="{{ search_query }}" placeholder="Search by resource name or topic..." 
+                       class="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm text-slate-700 transition-all">
+            </div>
+
+            <!-- Selector de Tipo -->
+            <div class="sm:w-48">
+                <select name="type" onchange="this.form.submit()" 
+                        class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-white focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-sm text-slate-700 transition-all">
+                    <option value="all" {% if current_type == 'all' %}selected{% endif %}>All Formats</option>
+                    <option value="document" {% if current_type == 'document' %}selected{% endif %}>📄 Local Files</option>
+                    <option value="video" {% if current_type == 'video' %}selected{% endif %}>🎬 Video Links</option>
+                    <option value="link" {% if current_type == 'link' %}selected{% endif %}>🔗 External Links</option>
+                </select>
+            </div>
+
+            <!-- Botón Buscar -->
+            <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl transition-colors shadow-xs">
+                Filter
+            </button>
+            
+            <!-- Botón Limpiar si hay filtros activos -->
+            {% if search_query or current_type != 'all' %}
+            <a href="{% url 'resources:multimedia_list' %}" class="border border-slate-200 hover:bg-slate-50 text-slate-500 font-bold text-xs px-4 py-2.5 rounded-xl transition-colors flex items-center justify-center">
+                Clear
+            </a>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- Grilla de Recursos Encontrados -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for res in resources %}
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs hover:shadow-xs transition-all flex flex-col justify-between space-y-4">
+            
+            <div class="space-y-3">
+                <!-- Header de la tarjeta -->
+                <div class="flex justify-between items-start">
+                    {% if res.resource_type == 'document' %}
+                        <span class="bg-emerald-50 text-emerald-700 text-[10px] font-extrabold px-2.5 py-1 rounded-md uppercase tracking-wider">File</span>
+                    {% elif res.resource_type == 'video' %}
+                        <span class="bg-red-50 text-red-700 text-[10px] font-extrabold px-2.5 py-1 rounded-md uppercase tracking-wider">Video</span>
+                    {% else %}
+                        <span class="bg-blue-50 text-blue-700 text-[10px] font-extrabold px-2.5 py-1 rounded-md uppercase tracking-wider">Link</span>
+                    {% endif %}
+                    
+                    <!-- Enlace al bloque al que pertenece -->
+                    <span class="text-[11px] text-slate-400 font-medium">
+                        <i class="fa-solid fa-layer-group text-slate-300"></i> Class #{{ res.class_block.id }}
+                    </span>
+                </div>
+
+                <!-- Título e icono representativo -->
+                <div class="flex items-start gap-3">
+                    <div class="text-2xl mt-0.5">
+                        {% if res.resource_type == 'document' %}📄{% elif res.resource_type == 'video' %}🎬{% else %}🔗{% endif %}
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-bold text-slate-800 line-clamp-2">{{ res.title }}</h4>
+                        <p class="text-[11px] text-indigo-600 font-semibold mt-0.5">Topic: {{ res.class_block.topic_title }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer con Acciones -->
+            <div class="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+                <!-- Ir al workspace original -->
+                <a href="{% url 'resources:lesson_workspace_detail' res.class_block.id %}" class="text-[11px] text-slate-500 hover:text-indigo-600 font-bold transition-colors">
+                    <i class="fa-solid fa-arrow-right-to-bracket"></i> View Workspace
+                </a>
+
+                <!-- Descarga o Visualización -->
+                {% if res.file %}
+                    <a href="{{ res.file.url }}" download class="bg-slate-50 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-200 text-slate-700 hover:text-emerald-700 text-[11px] font-bold py-1.5 px-3 rounded-lg shadow-2xs transition-all">
+                        <i class="fa-solid fa-download"></i> Download
+                    </a>
+                {% elif res.url %}
+                    <a href="{{ res.url }}" target="_blank" class="bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-200 text-slate-700 hover:text-blue-700 text-[11px] font-bold py-1.5 px-3 rounded-lg shadow-2xs transition-all">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i> Open Link
+                    </a>
+                {% endif %}
+            </div>
+
+        </div>
+        {% empty %}
+        <!-- Estado Vacío -->
+        <div class="col-span-full text-center py-16 bg-white rounded-2xl border border-slate-200 shadow-2xs">
+            <i class="fa-solid fa-photo-film text-4xl text-slate-300 mb-3 block"></i>
+            <h4 class="text-base font-bold text-slate-700">No resources found</h4>
+            <p class="text-xs text-slate-400 mt-1">Try changing your filters or add new support material inside your active Class Workspaces.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

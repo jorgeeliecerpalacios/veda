@@ -36,6 +36,12 @@ class TrackableResource(models.Model):
         return f"[{self.get_resource_type_display()}] {self.title}"
 
 class Resource(models.Model):
+    """ Recursos multimedia (Imágenes, Videos, Audios) asociados a un bloque de clase específico. """
+    class Meta:
+        verbose_name = "Resource"
+        verbose_name_plural = "Resources"
+
+
     RESOURCE_TYPES = (
         ('document', 'PDF / Documento'),
         ('video', 'YouTube / Video'),
