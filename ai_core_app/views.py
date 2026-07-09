@@ -1,9 +1,11 @@
 import json
 
+from django.db.models import Count
 from django.shortcuts import get_object_or_404, render
 from django.utils.dateparse import parse_datetime
 from django.utils.timezone import is_naive, make_aware
 from django.views import View
+from django.views.generic import ListView
 from schedule_app.models import ClassBlock, Subject
 
 # pyrefly: ignore [missing-import]
@@ -94,3 +96,17 @@ class ResearchTopicView(View):
                 "lesson_material": lesson_material, # Texto limpio para el cuadro central
             },
         )
+
+
+class AIResearchDashboardView(ListView):
+    """
+    Panel principal (Hub) de Inteligencia Artificial.
+    Permite al docente elegir en qué materia quiere realizar investigación con Gemini.
+    """
+    model = Subject
+    template_name = "ai_core/research_dashboard.html"
+    context_object_name = "subjects"
+
+    def get_queryset(self):  # noqa: ANN201
+        # Traemos las materias y anotamos cuántas clases (ClassBlocks) se han generado en cada una
+        return Subject.objects.annotate(total_classes=Count('class_blocks')).order_by('name')
