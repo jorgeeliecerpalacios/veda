@@ -27,7 +27,7 @@
             </p>
         </div>
 
-        <!-- 2. Tarjeta Dinámica: Recommended Classroom Activity (Con soporte para saltos de línea) -->
+        <!-- 2. Tarjeta Dinámica: Recommended Classroom Activity -->
         <div class="bg-amber-50 border border-amber-200 p-6 rounded-2xl shadow-sm">
             <h4 class="text-lg font-bold text-amber-800 flex items-center gap-2 mb-3">
                 <i class="fa-solid fa-lightbulb text-amber-500"></i> Recommended Classroom Activity
@@ -41,7 +41,7 @@
             </div>
         </div>
 
-        <!-- 3. NUEVA SECCIÓN COMPLEMENTARIA: Class Resources Inline Viewer -->
+        <!-- 3. SECCIÓN COMPLEMENTARIA: Class Resources Inline Viewer -->
         <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
             <h4 class="text-base font-bold text-slate-800 flex items-center gap-2">
                 <i class="fa-solid fa-eye text-blue-500"></i> Attached Document & Resource Viewer
@@ -54,7 +54,17 @@
                     <div class="border border-slate-100 rounded-xl p-4 bg-slate-50/50 space-y-3">
                         <div class="flex items-center justify-between">
                             <span class="text-xs font-bold text-slate-700 block">📁 Resource Display: {{ res.title }}</span>
-                            <span class="text-[10px] bg-slate-200 text-slate-600 px-2 py-0.5 rounded-sm font-extrabold uppercase">{{ res.get_resource_type_display }}</span>
+                            <div class="flex items-center gap-3">
+                                <span class="text-[10px] bg-slate-200 text-slate-600 px-2 py-0.5 rounded-sm font-extrabold uppercase">{{ res.get_resource_type_display }}</span>
+                                
+                                <!-- 🎯 PAPELERA INTERNA: Para eliminar directo desde el visor de previsualización -->
+                                <form action="{% url 'resources:delete_resource' res.id %}" method="POST" onsubmit="return confirm('¿Estás seguro de que deseas eliminar este recurso?');" class="inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="text-slate-400 hover:text-red-500 transition-colors p-1" title="Eliminar recurso">
+                                        <i class="fa-solid fa-trash-can text-xs"></i>
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                         
                         <!-- Si el recurso es un archivo local (PDF o Imagen) -->
@@ -71,7 +81,6 @@
                         <!-- Si el recurso es un link externo o de video -->
                         {% elif res.url %}
                             {% if "youtube.com" in res.url|lower or "youtu.be" in res.url|lower %}
-                                <!-- Aquí podrías formatear un iframe embebido, por ahora dejamos un preview link rápido -->
                                 <div class="p-4 bg-red-50/50 border border-red-100 rounded-lg flex items-center justify-between">
                                     <p class="text-xs text-red-800 font-medium">🎬 This YouTube stream context can be fully triggered externally:</p>
                                     <a href="{{ res.url }}" target="_blank" class="text-xs bg-red-600 hover:bg-red-700 text-white font-bold py-1 px-3 rounded-lg transition-colors">Launch Video</a>
@@ -108,7 +117,7 @@
             </ul>
         </div>
 
-        <!-- 1. Media Search Keywords (Transformados en botones inteligentes de búsqueda directa) -->
+        <!-- Media Search Keywords -->
         <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
             <h4 class="font-bold text-slate-800 flex items-center gap-2">
                 <i class="fa-solid fa-photo-film text-indigo-500"></i> Media Search Keywords
@@ -157,17 +166,27 @@
                         {% else %}
                             <span class="text-lg">🔗</span>
                         {% endif %}
-                        <div>
-                            <p class="text-xs font-bold text-slate-700 line-clamp-1">{{ res.title }}</p>
+                        <div class="max-w-[120px] sm:max-w-[150px]">
+                            <p class="text-xs font-bold text-slate-700 line-clamp-1" title="{{ res.title }}">{{ res.title }}</p>
                             <span class="text-[10px] text-slate-400 font-semibold uppercase">{{ res.get_resource_type_display }}</span>
                         </div>
                     </div>
 
-                    {% if res.file %}
-                        <a href="{{ res.file.url }}" download class="text-[11px] bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 py-1 px-2.5 rounded-md font-bold shadow-2xs">Download</a>
-                    {% elif res.url %}
-                        <a href="{{ res.url }}" target="_blank" class="text-[11px] bg-white border border-slate-200 text-blue-600 hover:bg-blue-50 py-1 px-2.5 rounded-md font-bold shadow-2xs">Open</a>
-                    {% endif %}
+                    <div class="flex items-center gap-2">
+                        {% if res.file %}
+                            <a href="{{ res.file.url }}" download class="text-[11px] bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 py-1 px-2.5 rounded-md font-bold shadow-2xs">Download</a>
+                        {% elif res.url %}
+                            <a href="{{ res.url }}" target="_blank" class="text-[11px] bg-white border border-slate-200 text-blue-600 hover:bg-blue-50 py-1 px-2.5 rounded-md font-bold shadow-2xs">Open</a>
+                        {% endif %}
+
+                        <!-- 🎯 PAPELERA LATERAL: Control rápido en el listado derecho -->
+                        <form action="{% url 'resources:delete_resource' res.id %}" method="POST" onsubmit="return confirm('¿Estás seguro de que deseas eliminar este recurso?');" class="inline flex items-center">
+                            {% csrf_token %}
+                            <button type="submit" class="text-slate-400 hover:text-red-500 transition-colors p-1" title="Eliminar recurso">
+                                <i class="fa-solid fa-trash-can text-xs"></i>
+                            </button>
+                        </form>
+                    </div>
                 </div>
                 {% empty %}
                 <div class="text-center py-6 border-2 border-dashed border-slate-100 rounded-xl">

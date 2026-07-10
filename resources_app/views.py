@@ -37,6 +37,19 @@ def add_resource(request, block_id):  # noqa: ANN001, ANN201
 
     return render(request, "resources/add_resource_modal.html", {"block": block})
 
+def delete_resource(request, resource_id):  # noqa: ANN001, ANN201
+    # Obtenemos el recurso
+    resource = get_object_or_404(Resource, id=resource_id)
+    block_id = resource.class_block.id
+    title = resource.title
+
+    if request.method == "POST":
+        # Eliminamos el registro de la BD (Django se encarga de limpiar el archivo si está configurado, o simplemente rompe el vínculo)
+        resource.delete()
+        messages.success(request, f"El recurso '{title}' ha sido eliminado correctamente.")
+
+    return redirect("resources:lesson_workspace_detail", block_id=block_id)
+
 class ClassBlockDetailView(View):
     def get(self, request, block_id):  # noqa: ANN001, ANN201
         block = get_object_or_404(ClassBlock, id=block_id)
