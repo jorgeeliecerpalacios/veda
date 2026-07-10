@@ -15,6 +15,13 @@ urlpatterns = [
         view=views.SubjectCreateView.as_view(),
         name="subject_create",
     ),
+
+    path(
+        route="workspace/<int:block_id>/edit-schedule/",
+        view=views.EditBlockScheduleView.as_view(),
+        name="edit_block_schedule"
+    ),
+
     # 🎯 NUEVA: Ruta para listar las materias de forma independiente
     path(route="subjects/all/", view=views.SubjectDashboardListView.as_view(), name="my_subjects_list"),
 ]

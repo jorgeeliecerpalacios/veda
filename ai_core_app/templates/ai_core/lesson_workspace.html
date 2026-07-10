@@ -10,13 +10,31 @@
     <div class="lg:col-span-2 space-y-6">
         <!-- Tarjeta de Material de la Lección -->
         <div class="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-            <div class="flex justify-between items-start">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <span class="bg-indigo-100 text-indigo-700 text-xs font-bold px-3 py-1 rounded-full">
                     {{ block.pedagogical_methodology }}
                 </span>
-                <p class="text-xs text-slate-400 font-mono"><i class="fa-solid fa-calendar"></i> {{ block.start_time }}</p>
+                
+                <!-- 🎯 FORMULARIO DE REAJUSTE DE HORAS INTEGRADO EN LA CABECERA -->
+                <form action="{% url 'schedule:edit_block_schedule' block_id=new_block.id %}" method="POST" class="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100 text-[11px]">
+                    {% csrf_token %}
+                    <div class="flex items-center gap-2">
+                        <label class="font-bold text-slate-500"><i class="fa-solid fa-calendar-days text-indigo-500"></i> Inicio:</label>
+                        <!-- 🎯 Cambiado block.start_time por new_block.start_time -->
+                        <input type="datetime-local" name="start_time" value="{{ new_block.start_time|date:'Y-m-d\TH:i' }}" required class="border border-slate-200 rounded-md p-1 bg-white text-slate-600 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label class="font-bold text-slate-500">Fin:</label>
+                        <!-- 🎯 Cambiado block.end_time por new_block.end_time -->
+                        <input type="datetime-local" name="end_time" value="{{ new_block.end_time|date:'Y-m-d\TH:i' }}" required class="border border-slate-200 rounded-md p-1 bg-white text-slate-600 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                    </div>
+                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-2.5 py-1 rounded-md shadow-2xs transition-colors">
+                        Reajustar
+                    </button>
+                </form>
             </div>
-            <h2 class="text-3xl font-extrabold text-slate-800">{{ block.topic_title }}</h2>
+            
+            <h2 class="text-3xl font-extrabold text-slate-800 mt-2">{{ block.topic_title }}</h2>
             <hr class="border-slate-100">
             
             <h4 class="text-lg font-bold text-slate-700 flex items-center gap-2">
@@ -57,7 +75,7 @@
                             <div class="flex items-center gap-3">
                                 <span class="text-[10px] bg-slate-200 text-slate-600 px-2 py-0.5 rounded-sm font-extrabold uppercase">{{ res.get_resource_type_display }}</span>
                                 
-                                <!-- 🎯 PAPELERA INTERNA: Para eliminar directo desde el visor de previsualización -->
+                                <!-- 🎯 PAPELERA INTERNA -->
                                 <form action="{% url 'resources:delete_resource' res.id %}" method="POST" onsubmit="return confirm('¿Estás seguro de que deseas eliminar este recurso?');" class="inline">
                                     {% csrf_token %}
                                     <button type="submit" class="text-slate-400 hover:text-red-500 transition-colors p-1" title="Eliminar recurso">
@@ -179,7 +197,7 @@
                             <a href="{{ res.url }}" target="_blank" class="text-[11px] bg-white border border-slate-200 text-blue-600 hover:bg-blue-50 py-1 px-2.5 rounded-md font-bold shadow-2xs">Open</a>
                         {% endif %}
 
-                        <!-- 🎯 PAPELERA LATERAL: Control rápido en el listado derecho -->
+                        <!-- 🎯 PAPELERA LATERAL -->
                         <form action="{% url 'resources:delete_resource' res.id %}" method="POST" onsubmit="return confirm('¿Estás seguro de que deseas eliminar este recurso?');" class="inline flex items-center">
                             {% csrf_token %}
                             <button type="submit" class="text-slate-400 hover:text-red-500 transition-colors p-1" title="Eliminar recurso">

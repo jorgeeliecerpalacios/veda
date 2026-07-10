@@ -1,5 +1,13 @@
+from django.contrib import messages
+from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
-from django.views.generic import CreateView, ListView  # 👈 Añadimos CreateView aquí
+from django.utils.dateparse import parse_datetime
+from django.utils.timezone import is_naive, make_aware
+from django.views.generic import (  # 👈 Añadimos CreateView y View aquí
+    CreateView,
+    ListView,
+    View,
+)
 
 # pyrefly: ignore [missing-import]
 from .models import ClassBlock, Subject
@@ -47,3 +55,31 @@ class SubjectDashboardListView(ListView):
 
     def get_queryset(self):  # noqa: ANN201
         return Subject.objects.all().order_by('name')
+
+class EditBlockScheduleView(View):
+    def post(self, request, block_id):  # noqa: ANN001, ANN201
+        block = get_object_or_404(ClassBlock, id=block_id)
+
+        # Capturamos los nuevos inputs de tiempo
+        start_str = request.POST.get("start_time")
+        end_str = request.POST.get("end_time")
+
+        # Procesamos start_time
+        if start_str:
+            start_dt = parse_datetime(start_str)
+            if start_dt and is_naive(start_dt):
+                start_dt = make_aware(start_dt)
+            block.start_time = start_dt
+
+        # Procesamos end_time
+        if end_str:
+            end_dt = parse_datetime(end_str)
+            if end_dt and is_naive(end_dt):
+                end_dt = make_aware(end_dt)
+            block.end_time = end_dt
+
+        block.save()
+        messages.success(request, "¡Horario de la clase actualizado con éxito!")
+
+        # Redireccionamos de vuelta al mismo workspace detallado
+        return redirect("resources:lesson_workspace_detail", block_id=block.id)
